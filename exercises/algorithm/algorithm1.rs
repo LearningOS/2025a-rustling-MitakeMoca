@@ -2,8 +2,7 @@
     single linked list merge
     This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
-
+use std::cmp::PartialOrd;
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
 use std::vec::*;
@@ -26,13 +25,13 @@ struct LinkedList<T> {
     end: Option<NonNull<Node<T>>>,
 }
 
-impl<T> Default for LinkedList<T> {
+impl<T: PartialOrd + Clone> Default for LinkedList<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T> LinkedList<T> {
+impl<T: PartialOrd + Clone> LinkedList<T> {
     pub fn new() -> Self {
         Self {
             length: 0,
@@ -68,11 +67,49 @@ impl<T> LinkedList<T> {
     }
     pub fn merge(list_a: LinkedList<T>, list_b: LinkedList<T>) -> Self {
         //TODO
+        let mut list_a = Self { ..list_a };
+
+        let mut list_b = Self { ..list_b };
+
         let mut lst = Self {
             length: 0,
             start: None,
             end: None,
         };
+
+        while let (Some(x), Some(y)) = (list_a.start, list_b.start) {
+            let a_val = unsafe { (*x.as_ptr()).val.clone() };
+            let b_val = unsafe { (*y.as_ptr()).val.clone() };
+            if a_val < b_val {
+                lst.add(a_val);
+                list_a.length -= 1;
+                list_a.start = unsafe { (*x.as_ptr()).next };
+            } else {
+                lst.add(b_val);
+                list_b.length -= 1;
+                list_b.start = unsafe { (*y.as_ptr()).next };
+            }
+        }
+
+        if list_a.start == None {
+            while let Some(x) = list_b.start {
+                let val = unsafe { (*x.as_ref()).val.clone() };
+                lst.add(val);
+                list_b.length -= 1;
+                list_b.start = unsafe { (*x.as_ptr()).next };
+            }
+        }
+
+        if list_b.start == None {
+            while let Some(x) = list_a.start {
+                let val = unsafe { (*x.as_ref()).val.clone() };
+                lst.add(val);
+                list_a.length -= 1;
+                list_a.start = unsafe { (*x.as_ptr()).next };
+            }
+        }
+
+        lst
     }
 }
 

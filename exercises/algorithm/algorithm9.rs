@@ -1,8 +1,7 @@
 /*
-	heap
-	This question requires you to implement a binary heap function
+    heap
+    This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -14,6 +13,7 @@ where
     count: usize,
     items: Vec<T>,
     comparator: fn(&T, &T) -> bool,
+    iter: T,
 }
 
 impl<T> Heap<T>
@@ -25,6 +25,7 @@ where
             count: 0,
             items: vec![T::default()],
             comparator,
+            iter: T::default(),
         }
     }
 
@@ -38,6 +39,18 @@ where
 
     pub fn add(&mut self, value: T) {
         //TODO
+        self.count += 1;
+        self.items.push(value);
+        let mut tem = self.count;
+        while tem != 1 {
+            let par = self.parent_idx(tem);
+            if (self.comparator)(&self.items[tem], &self.items[par]) {
+                self.items.swap(tem, par);
+            } else {
+                break;
+            }
+            tem = par;
+        }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -58,7 +71,16 @@ where
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
         //TODO
-		0
+        let tem1 = self.left_child_idx(idx);
+        let tem2 = self.right_child_idx(idx);
+        if tem2 <= self.count {
+            if (self.comparator)(&self.items[tem1], &self.items[tem2]) {
+                return tem1;
+            }
+            return tem2;
+        } else {
+            return tem1;
+        }
     }
 }
 
@@ -84,8 +106,30 @@ where
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        //TODO
-		None
+        if self.count == 0 {
+            return None;
+        }
+
+        let top = std::mem::replace(&mut self.items[1], T::default());
+        let last = self.items.pop().unwrap();
+        self.count -= 1;
+
+        if self.count > 0 {
+            self.items[1] = last;
+
+            let mut idx = 1;
+            while self.children_present(idx) {
+                let child = self.smallest_child_idx(idx);
+                if (self.comparator)(&self.items[child], &self.items[idx]) {
+                    self.items.swap(idx, child);
+                    idx = child;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        Some(top)
     }
 }
 
